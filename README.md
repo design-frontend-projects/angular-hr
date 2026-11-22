@@ -60,6 +60,16 @@ curl http://localhost:4000/health
 5. **Environment Variables** (Production):
    - `NODE_ENV=production`
    - `PORT=4000`
-   - `NG_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com` *(Required by Angular SSR SSRF protection)*
+   - `HOST=0.0.0.0`
+   - `NG_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com` *(Required by Angular SSR SSRF protection; include your Coolify `*.sslip.io` domain if testing without a custom domain)*
    - `NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for`
 6. Click **Deploy**. Coolify will build the multi-stage image, verify `/health`, and route HTTPS traffic via Traefik/Caddy with zero-downtime rolling updates.
+
+### Troubleshooting Coolify `503 Service Unavailable` / `Exited`
+
+If Coolify returns `503 Service Unavailable` or shows **Exited** (`No deployed container found`) even after the server logs `SwiftRoute SSR server listening on http://0.0.0.0:4000`:
+
+1. **Check Deployment Logs**: Confirm whether Coolify aborted the deployment due to a failed healthcheck (e.g., `New container is not healthy`). The production `Dockerfile` installs `curl` in `node:24-alpine` so Coolify's built-in healthcheck works out of the box.
+2. **Verify Exposed Port**: Under **General → Access → Internal access**, confirm **Exposed ports** is `4000` (not Coolify's `3000` default).
+3. **Verify Healthcheck**: Under **Healthcheck**, set **Path** to `/health`, **Port** to `4000`, **Method** to `GET`, and **Return Code** to `200`.
+4. **Allowlist the Active Domain**: Ensure the exact domain shown under **General → Access → Public access** (e.g., `your-id.sslip.io`) is included in `NG_ALLOWED_HOSTS`, then click **Deploy**.

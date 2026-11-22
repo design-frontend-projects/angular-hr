@@ -34,9 +34,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOST=0.0.0.0
+ENV NG_ALLOWED_HOSTS="localhost,127.0.0.1"
+ENV NG_TRUST_PROXY_HEADERS="x-forwarded-host,x-forwarded-proto,x-forwarded-for"
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs \
+# Install curl for Coolify UI healthchecks and create non-root user for security
+RUN apk add --no-cache curl \
+  && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 angular
 
 COPY --from=prod-deps --chown=angular:nodejs /app/node_modules ./node_modules

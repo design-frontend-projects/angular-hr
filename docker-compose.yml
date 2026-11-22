@@ -1,6 +1,5 @@
 services:
   swiftroute:
-    container_name: swiftroute-prod
     build:
       context: .
       dockerfile: Dockerfile

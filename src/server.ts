@@ -78,6 +78,24 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Global Express error handler so SSR/runtime failures are clearly surfaced in Coolify Runtime Logs.
+ */
+app.use(
+  (
+    err: unknown,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    console.error(`[SwiftRoute SSR Error] ${req.method} ${req.originalUrl}:`, err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    res.status(500).json({ error: 'Internal Server Error' });
+  },
+);
+
+/**
  * Start the server if this module is the main entry point, or run via PM2.
  * Listens on PORT env var (defaults to 4000 for Coolify).
  */
@@ -90,7 +108,10 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
       throw error;
     }
 
-    console.log(`SwiftRoute SSR server listening on http://${host}:${port}`);
+    const allowedHosts = process.env['NG_ALLOWED_HOSTS'] || '(not set)';
+    console.log(
+      `SwiftRoute SSR server listening on http://${host}:${port} (NODE_ENV=${process.env['NODE_ENV'] || 'development'}, NG_ALLOWED_HOSTS=${allowedHosts})`,
+    );
   });
 
   const shutdown = (signal: string) => {
